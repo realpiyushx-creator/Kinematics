@@ -2,17 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JEE Physics Lab v4 | Master Suite</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JEE Physics Lab v5 | Mobile</title>
     <style>
         :root {
             --bg: #09090b;
-            --panel: rgba(24, 24, 27, 0.95);
+            --panel: rgba(24, 24, 27, 0.9);
             --primary: #8b5cf6; /* Violet */
             --accent: #06b6d4; /* Cyan */
             --success: #10b981;
             --text: #e4e4e7;
-            --border: #27272a;
+            --border: rgba(255, 255, 255, 0.1);
         }
 
         body {
@@ -20,122 +20,175 @@
             overflow: hidden;
             background-color: var(--bg);
             color: var(--text);
-            font-family: 'Inter', system-ui, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         canvas {
             display: block;
             width: 100vw;
             height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
         }
 
-        /* --- UI OVERLAY --- */
-        #ui-layer {
+        /* --- HUD LAYER --- */
+        #hud-layer {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             pointer-events: none;
+            z-index: 10;
             display: flex;
-            padding: 20px;
-            box-sizing: border-box;
+            flex-direction: column;
             justify-content: space-between;
         }
 
-        .panel {
-            background: var(--panel);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--border);
-            padding: 20px;
-            border-radius: 16px;
-            width: 340px;
+        /* --- TOP TELEMETRY BAR --- */
+        .telemetry-bar {
+            background: linear-gradient(180deg, var(--panel) 0%, rgba(24,24,27,0) 100%);
+            padding: 15px;
+            display: flex;
+            justify-content: space-around;
             pointer-events: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-            transition: transform 0.3s ease;
+            backdrop-filter: blur(4px);
         }
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 12px;
-            margin-bottom: 4px;
+        .t-item {
+            text-align: center;
         }
-        h2 { margin: 0; font-size: 1rem; font-weight: 800; letter-spacing: 0.5px; color: var(--primary); }
-        .badge { background: var(--border); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; color: #a1a1aa; }
-
-        /* SCENARIO BUTTONS */
-        .scenario-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-        .scenario-btn {
-            background: #18181b;
-            border: 1px solid var(--border);
-            color: #a1a1aa;
-            padding: 10px 4px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.2s;
-        }
-        .scenario-btn:hover { background: #27272a; color: white; }
-        .scenario-btn.active {
-            background: var(--primary);
+        .t-val {
+            display: block;
+            font-family: monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
             color: white;
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+        }
+        .t-lbl {
+            font-size: 0.7rem;
+            color: #a1a1aa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        /* SLIDERS & INPUTS */
-        .control-group { display: flex; flex-direction: column; gap: 6px; }
-        .label-row { display: flex; justify-content: space-between; font-size: 0.8rem; color: #a1a1aa; }
-        .val-display { color: var(--accent); font-family: monospace; font-weight: bold; }
+        /* --- BOTTOM CONTROL DOCK --- */
+        .bottom-dock {
+            background: var(--panel);
+            padding: 15px;
+            padding-bottom: max(15px, env(safe-area-inset-bottom)); /* Handle iPhone notch */
+            pointer-events: auto;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
 
-        input[type="range"] {
-            -webkit-appearance: none; width: 100%; height: 5px; background: #27272a; border-radius: 3px; outline: none;
+        /* --- BUTTONS --- */
+        .btn-icon {
+            background: #27272a;
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            flex-shrink: 0;
         }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 18px; height: 18px; background: white; border-radius: 50%; cursor: pointer;
-            border: 2px solid var(--primary); box-shadow: 0 0 5px rgba(0,0,0,0.5);
-        }
+        .btn-icon:active { background: #3f3f46; transform: scale(0.95); }
+        .btn-icon.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* ACTION BUTTONS */
-        .action-row { display: flex; gap: 10px; margin-top: 10px; }
-        .btn {
-            flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem; text-transform: uppercase;
-        }
-        .btn-secondary { background: #27272a; color: white; border: 1px solid var(--border); }
-        .btn-secondary:hover { background: #3f3f46; }
-        .btn-primary { 
-            background: linear-gradient(135deg, var(--primary), #7c3aed); color: white; 
+        .btn-fire {
+            flex-grow: 1;
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            height: 50px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
             box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
         }
-        .btn-primary:active { transform: scale(0.98); }
+        .btn-fire:active { transform: scale(0.98); }
 
-        /* TELEMETRY */
-        .telemetry-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .t-box { background: rgba(0,0,0,0.2); border: 1px solid var(--border); padding: 8px; border-radius: 6px; }
-        .t-val { display: block; font-family: monospace; font-size: 1.1rem; color: white; font-weight: 700; }
-        .t-lbl { font-size: 0.7rem; color: #a1a1aa; text-transform: uppercase; }
+        /* --- SETTINGS MENU (SLIDE UP) --- */
+        #settings-menu {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #18181b;
+            border-top: 2px solid var(--primary);
+            border-radius: 24px 24px 0 0;
+            padding: 25px 20px;
+            padding-bottom: max(90px, env(safe-area-inset-bottom) + 90px); /* Space for dock */
+            box-sizing: border-box;
+            transform: translateY(110%);
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            pointer-events: auto;
+            z-index: 5; /* Below dock */
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+        }
+        #settings-menu.open { transform: translateY(0); }
+
+        .menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .menu-title { font-size: 1.2rem; font-weight: 800; color: white; }
+        .btn-close { background: none; border: none; color: #a1a1aa; font-size: 1.5rem; padding: 5px; }
+
+        /* SLIDERS */
+        .control-group { margin-bottom: 20px; }
+        .label-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; color: #a1a1aa; }
+        .val-display { color: var(--accent); font-family: monospace; font-weight: bold; font-size: 1rem; }
+
+        input[type="range"] {
+            -webkit-appearance: none; width: 100%; height: 6px; background: #3f3f46; border-radius: 3px; outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 24px; height: 24px; background: white; border-radius: 50%; cursor: pointer;
+            border: 3px solid var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        /* SCENARIO TOGGLES */
+        .scenario-toggles {
+            display: flex;
+            background: #27272a;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 25px;
+        }
+        .scenario-btn {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #a1a1aa;
+            transition: all 0.2s;
+        }
+        .scenario-btn.active { background: var(--primary); color: white; }
 
         /* HINTS & MESSAGES */
-        .tooltip {
-            background: rgba(6, 182, 212, 0.1); border-left: 3px solid var(--accent); padding: 10px;
-            font-size: 0.8rem; color: #a1a1aa; margin-top: 5px; border-radius: 0 6px 6px 0;
-        }
         #hit-msg {
             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
             font-size: 3rem; font-weight: 900; color: var(--success); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            text-shadow: 0 0 30px var(--success); pointer-events: none;
+            text-shadow: 0 0 30px var(--success); pointer-events: none; z-index: 20;
         }
         #hit-msg.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
@@ -146,24 +199,36 @@
 <div id="hit-msg">TARGET HIT!</div>
 <canvas id="simCanvas"></canvas>
 
-<div id="ui-layer">
-    <div class="panel">
-        <div class="header">
-            <h2>PHYSICS LAB v4</h2>
-            <span class="badge">JEE ADVANCED</span>
+<div id="hud-layer">
+    <div class="telemetry-bar">
+        <div class="t-item">
+            <span class="t-val" style="color:#f472b6" id="val-vx">0.0</span>
+            <span class="t-lbl">Vx</span>
+        </div>
+        <div class="t-item">
+            <span class="t-val" style="color:#38bdf8" id="val-vy">0.0</span>
+            <span class="t-lbl">Vy</span>
+        </div>
+        <div class="t-item">
+            <span class="t-val" style="color:#eab308" id="val-h">0.0</span>
+            <span class="t-lbl">Height</span>
+        </div>
+        <div class="t-item">
+            <span class="t-val" style="color:#10b981" id="val-r">0.0</span>
+            <span class="t-lbl">Range</span>
+        </div>
+    </div>
+
+    <div id="settings-menu">
+        <div class="menu-header">
+            <span class="menu-title">Simulation Config</span>
+            <button class="btn-close" onclick="toggleSettings()">✕</button>
         </div>
 
-        <div class="label-row"><span>Select Scenario</span></div>
-        <div class="scenario-grid">
-            <button class="scenario-btn active" onclick="setScenario('GROUND')" id="btn-ground">
-                <span>⛰️</span> Ground
-            </button>
-            <button class="scenario-btn" onclick="setScenario('TOWER')" id="btn-tower">
-                <span>🏢</span> Tower
-            </button>
-            <button class="scenario-btn" onclick="setScenario('INCLINE')" id="btn-incline">
-                <span>📐</span> Incline
-            </button>
+        <div class="scenario-toggles">
+            <div class="scenario-btn active" onclick="setScenario('GROUND')" id="btn-ground">Ground</div>
+            <div class="scenario-btn" onclick="setScenario('TOWER')" id="btn-tower">Tower</div>
+            <div class="scenario-btn" onclick="setScenario('INCLINE')" id="btn-incline">Incline</div>
         </div>
 
         <div class="control-group">
@@ -176,7 +241,7 @@
             <input type="range" id="input-theta" min="0" max="90" value="45" oninput="updateParam('theta', this.value)">
         </div>
 
-        <div class="control-group" id="group-incline" style="display:none; animation: fadeIn 0.3s;">
+        <div class="control-group" id="group-incline" style="display:none;">
             <div class="label-row"><span style="color:var(--accent)">Incline Angle ($\beta$)</span> <span id="disp-beta" class="val-display">30°</span></div>
             <input type="range" min="5" max="60" value="30" oninput="updateParam('beta', this.value)">
         </div>
@@ -185,48 +250,18 @@
             <div class="label-row"><span>Gravity ($g$)</span> <span id="disp-g" class="val-display">9.8 m/s²</span></div>
             <input type="range" min="1" max="20" step="0.1" value="9.8" oninput="updateParam('g', this.value)">
         </div>
-
-        <div class="action-row">
-            <button class="btn btn-secondary" onclick="clearSim()">Clear</button>
-            <button class="btn btn-primary" onclick="fire()">FIRE</button>
-        </div>
-
-        <div class="tooltip" id="hint-text">
-            <strong>Ground Mode:</strong> Drag the cannon to move. Drag the target to test range.
-        </div>
     </div>
 
-    <div class="panel" style="height: fit-content; align-self: flex-end; margin-bottom: 60px;">
-        <div class="header">
-            <h2>Real-Time Data</h2>
-            <div style="font-size:0.8rem; color:#666">t = <span id="disp-time">0.00</span>s</div>
-        </div>
-        
-        <div class="telemetry-grid">
-            <div class="t-box" style="border-left: 3px solid #f472b6;">
-                <span class="t-val" id="val-vx">0.0</span>
-                <span class="t-lbl">Vx (m/s)</span>
-            </div>
-            <div class="t-box" style="border-left: 3px solid #38bdf8;">
-                <span class="t-val" id="val-vy">0.0</span>
-                <span class="t-lbl">Vy (m/s)</span>
-            </div>
-            <div class="t-box" style="border-left: 3px solid #eab308;">
-                <span class="t-val" id="val-h">0.0</span>
-                <span class="t-lbl">Height (m)</span>
-            </div>
-            <div class="t-box" style="border-left: 3px solid #10b981;">
-                <span class="t-val" id="val-r">0.0</span>
-                <span class="t-lbl">Range (m)</span>
-            </div>
-        </div>
+    <div class="bottom-dock">
+        <button class="btn-icon" onclick="toggleSettings()" id="btn-settings">⚙️</button>
+        <button class="btn-icon" onclick="clearSim()">🗑️</button>
+        <button class="btn-fire" onclick="fire()">FIRE</button>
     </div>
 </div>
 
 <script>
 /**
- * NEWTONIAN LAB v4 - MASTER SUITE
- * Features: Scenarios, Incline Math, Vector Reflection, Draggable Cannon
+ * NEWTONIAN LAB v5 - MOBILE EDITION
  */
 
 const canvas = document.getElementById('simCanvas');
@@ -239,6 +274,7 @@ let activeId = -1;
 let particles = [];
 let dragging = { obj: null, offsetX: 0, offsetY: 0 };
 let timeScale = 1.0;
+let settingsOpen = false;
 
 let env = {
     scenario: 'GROUND', // GROUND, TOWER, INCLINE
@@ -247,49 +283,47 @@ let env = {
     bounce: 0.6
 };
 
-let cannon = { x: 50, y: 0, h: 0 }; // y is calc from bottom
-let target = { x: 600, y: 0, r: 25 };
+let cannon = { x: 50, y: 0, h: 0 };
+let target = { x: 300, y: 0, r: 25 };
 let params = { u: 50, theta: 45 };
 
 // --- INITIALIZATION ---
 function resize() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
-    groundY = height - 80;
+    // Ground is higher up on mobile to be visible above dock
+    groundY = height - 160; 
     
-    // Initial Placement
     if(cannon.y === 0) cannon.y = groundY;
-    if(target.y === 0) target.y = groundY;
+    if(target.y === 0) { target.x = width * 0.7; target.y = groundY; }
 }
 window.addEventListener('resize', resize);
+// Prevent mobile scrolling
+document.body.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
 resize();
 
-// --- SCENARIO LOGIC ---
+// --- UI LOGIC ---
+function toggleSettings() {
+    settingsOpen = !settingsOpen;
+    document.getElementById('settings-menu').classList.toggle('open', settingsOpen);
+    document.getElementById('btn-settings').classList.toggle('active', settingsOpen);
+}
+
 function setScenario(mode) {
     env.scenario = mode;
-    
-    // UI Updates
     document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('btn-' + mode.toLowerCase()).classList.add('active');
     
     const incGroup = document.getElementById('group-incline');
-    const hint = document.getElementById('hint-text');
-
     if (mode === 'INCLINE') {
-        incGroup.style.display = 'flex';
-        hint.innerHTML = "<strong>Incline Mode:</strong> Range is measured along the slope. $R = \\frac{u^2}{g\\cos^2\\beta} [\\sin(2\\alpha - \\beta) - \\sin\\beta]$";
-        cannon.y = groundY; // Reset to ground
-        cannon.x = 80;
+        incGroup.style.display = 'block';
+        cannon.y = groundY; cannon.x = 60;
     } else if (mode === 'TOWER') {
         incGroup.style.display = 'none';
-        hint.innerHTML = "<strong>Tower Mode:</strong> Drag the Cannon UP to increase height ($h$). Time of flight $T = \\sqrt{2h/g}$ (if horizontal).";
-        cannon.y = groundY - 150; // Auto lift
-        cannon.x = 50;
+        cannon.y = groundY - 150; cannon.x = 50;
     } else {
         incGroup.style.display = 'none';
-        hint.innerHTML = "<strong>Ground Mode:</strong> Classic Projectile. Drag Target to test calculations.";
-        cannon.y = groundY;
-        cannon.x = 50;
+        cannon.y = groundY; cannon.x = 50;
     }
     clearSim();
 }
@@ -302,39 +336,23 @@ function updateParam(key, val) {
     if(key === 'beta') { env.beta = val; document.getElementById('disp-beta').innerText = val + '°'; }
 }
 
-// --- PHYSICS ENGINE ---
+// --- PHYSICS ENGINE (Same as v4) ---
 class Particle {
     constructor(u, theta) {
-        this.active = true;
-        this.r = 8;
-        this.trail = [];
-        this.time = 0;
-        
-        // Spawn at cannon nozzle
+        this.active = true; this.r = 10; this.trail = []; this.time = 0;
         const rad = theta * (Math.PI / 180);
-        this.x = cannon.x;
-        this.y = cannon.y - 15; // Offset for aesthetic
-        this.startX = this.x;
-        this.startY = this.y;
-
-        this.vx = u * Math.cos(rad);
-        this.vy = -u * Math.sin(rad); // Up is negative
+        this.x = cannon.x; this.y = cannon.y - 15;
+        this.startX = this.x; this.startY = this.y;
+        this.vx = u * Math.cos(rad); this.vy = -u * Math.sin(rad);
     }
 
     update(dt) {
         if(!this.active) return;
         this.time += dt;
-
-        // Gravity
         this.vy += env.g * SCALE * dt;
-        
-        // Motion
         this.x += this.vx * SCALE * dt;
         this.y += this.vy * SCALE * dt;
-
         this.checkCollision();
-
-        // Trail
         if(this.active) {
             this.trail.push({x: this.x, y: this.y});
             if(this.trail.length > 300) this.trail.shift();
@@ -342,249 +360,140 @@ class Particle {
     }
 
     checkCollision() {
-        // 1. Target Hit
-        const dx = this.x - target.x;
-        const dy = this.y - target.y;
-        if(Math.hypot(dx, dy) < this.r + target.r) {
-            showHit();
-        }
+        const dx = this.x - target.x; const dy = this.y - target.y;
+        if(Math.hypot(dx, dy) < this.r + target.r) showHit();
 
-        // 2. Floor / Incline Hit
-        let hasHit = false;
-        let nx = 0, ny = -1; // Normal vector (default Up)
-
+        let hasHit = false; let nx = 0, ny = -1;
         if(env.scenario === 'INCLINE') {
-            // Check distance to line equation of incline
-            // Line starting at cannon.x, cannon.y with angle -beta (canvas coords)
             const betaRad = env.beta * (Math.PI/180);
-            // Height of incline at particle's X
             const dxC = this.x - cannon.x;
             if(dxC > 0) {
                 const inclineY = cannon.y - (dxC * Math.tan(betaRad));
                 if(this.y >= inclineY - this.r) {
-                    hasHit = true;
-                    // Normal vector for incline
-                    nx = -Math.sin(betaRad);
-                    ny = -Math.cos(betaRad);
-                    this.y = inclineY - this.r; // Snap to surface
+                    hasHit = true; nx = -Math.sin(betaRad); ny = -Math.cos(betaRad);
+                    this.y = inclineY - this.r;
                 }
-            } else if (this.y > groundY - this.r) {
-                 // Behind the wedge (flat ground)
-                 hasHit = true;
-                 this.y = groundY - this.r;
-            }
+            } else if (this.y > groundY - this.r) { hasHit = true; this.y = groundY - this.r; }
         } else {
-            // Standard Floor Check
-            if(this.y > groundY - this.r) {
-                hasHit = true;
-                this.y = groundY - this.r;
-            }
+            if(this.y > groundY - this.r) { hasHit = true; this.y = groundY - this.r; }
         }
 
         if(hasHit) {
-            // BOUNCE LOGIC (Vector Reflection)
-            // V_new = V - (1+e)(V . N)N
-            const dot = (this.vx * nx) + (this.vy * ny); // V dot N
-            
-            // Only bounce if moving INTO the surface
+            const dot = (this.vx * nx) + (this.vy * ny);
             if (dot > 0) {
-                const j = -(1 + env.bounce) * dot; // Impulse scalar (simplified)
-                
-                // Since N is normalized, and we are working component wise in canvas:
-                // Actually, simple reflection formula: v = v - 2(v.n)n scaled by restitution
-                // But simplified for game physics:
-                
-                // Let's use simple reflection for flat ground
-                if(env.scenario !== 'INCLINE') {
-                    this.vy *= -env.bounce;
-                    this.vx *= 0.8; // Friction
-                } else {
-                    // Vector math for incline bounce
-                    // Decompose V into Normal and Tangent
-                    // This is getting complex for canvas, let's cheat slightly for visual feel
-                    // Reflect velocity vector around Normal
+                if(env.scenario !== 'INCLINE') { this.vy *= -env.bounce; this.vx *= 0.8; } 
+                else {
                     this.vx -= (1 + env.bounce) * dot * nx;
                     this.vy -= (1 + env.bounce) * dot * ny;
-                    this.vx *= 0.9; // Friction
-                    this.vy *= 0.9;
+                    this.vx *= 0.9; this.vy *= 0.9;
                 }
-
-                // Stop if slow
                 if(Math.hypot(this.vx, this.vy) < 5) this.active = false;
             }
         }
-        
-        // Wall Kill
-        if(this.x > width || this.x < 0) this.active = false;
+        if(this.x > width + 100 || this.x < -100) this.active = false;
     }
 
     draw() {
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = `rgba(139, 92, 246, 0.5)`;
+        ctx.lineWidth = 4; ctx.strokeStyle = `rgba(139, 92, 246, 0.5)`;
         ctx.beginPath();
         if(this.trail.length) {
             ctx.moveTo(this.trail[0].x, this.trail[0].y);
             for(let p of this.trail) ctx.lineTo(p.x, p.y);
             ctx.stroke();
         }
-
         ctx.fillStyle = this.active ? '#fff' : '#666';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 15; ctx.shadowColor = '#8b5cf6'; ctx.fill(); ctx.shadowBlur=0;
     }
 }
 
 // --- RENDERING ---
 function drawEnv() {
-    // 1. Draw Ground
-    ctx.fillStyle = '#18181b';
-    ctx.fillRect(0, groundY, width, height-groundY);
-    ctx.strokeStyle = '#3f3f46';
-    ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(width, groundY); ctx.stroke();
+    ctx.fillStyle = '#18181b'; ctx.fillRect(0, groundY, width, height-groundY);
+    ctx.strokeStyle = '#3f3f46'; ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(width, groundY); ctx.stroke();
 
-    // 2. Draw Incline (if active)
     if(env.scenario === 'INCLINE') {
         const betaRad = env.beta * (Math.PI/180);
-        ctx.fillStyle = '#27272a';
-        ctx.beginPath();
-        ctx.moveTo(cannon.x, groundY);
-        // Calculate triangle point far right
-        const xEnd = width;
-        const yEnd = groundY - (width - cannon.x) * Math.tan(betaRad);
-        ctx.lineTo(xEnd, yEnd);
-        ctx.lineTo(xEnd, groundY);
-        ctx.fill();
-        
-        // Incline Line
-        ctx.strokeStyle = 'var(--accent)';
-        ctx.lineWidth = 2;
+        ctx.fillStyle = '#27272a'; ctx.beginPath(); ctx.moveTo(cannon.x, groundY);
+        const xEnd = width + 100;
+        const yEnd = groundY - (xEnd - cannon.x) * Math.tan(betaRad);
+        ctx.lineTo(xEnd, yEnd); ctx.lineTo(xEnd, groundY); ctx.fill();
+        ctx.strokeStyle = 'var(--accent)'; ctx.lineWidth = 3;
         ctx.beginPath(); ctx.moveTo(cannon.x, groundY); ctx.lineTo(xEnd, yEnd); ctx.stroke();
-        
-        // Angle Arc
-        ctx.beginPath();
-        ctx.arc(cannon.x, groundY, 40, -betaRad, 0);
-        ctx.strokeStyle = '#aaa'; ctx.lineWidth=1; ctx.stroke();
-        ctx.fillText("β", cannon.x + 50, groundY - 10);
     } else if (env.scenario === 'TOWER') {
-        // Draw Tower Pillar
-        ctx.fillStyle = '#3f3f46';
-        ctx.fillRect(cannon.x - 20, cannon.y, 40, groundY - cannon.y);
-        // Ruler Line
-        ctx.beginPath();
-        ctx.moveTo(cannon.x - 30, cannon.y);
-        ctx.lineTo(cannon.x - 30, groundY);
-        ctx.strokeStyle = '#fff';
-        ctx.setLineDash([5,5]); ctx.stroke(); ctx.setLineDash([]);
-        ctx.fillStyle = '#fff';
-        ctx.fillText(`h = ${((groundY - cannon.y)/SCALE).toFixed(1)}m`, cannon.x - 80, (groundY + cannon.y)/2);
+        ctx.fillStyle = '#3f3f46'; ctx.fillRect(cannon.x - 25, cannon.y, 50, groundY - cannon.y);
     }
 
-    // 3. Draw Cannon
-    ctx.save();
-    ctx.translate(cannon.x, cannon.y);
-    // Draw Base
-    ctx.fillStyle = '#8b5cf6';
-    ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI*2); ctx.fill();
-    // Draw Barrel
+    ctx.save(); ctx.translate(cannon.x, cannon.y);
+    ctx.fillStyle = '#8b5cf6'; ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI*2); ctx.fill();
     ctx.rotate(-params.theta * Math.PI/180);
-    ctx.fillStyle = '#6d28d9';
-    ctx.fillRect(0, -10, 40, 20);
+    ctx.fillStyle = '#6d28d9'; ctx.fillRect(0, -12, 50, 24);
     ctx.restore();
 
-    // 4. Draw Target
-    // Adjust target Y based on scenario for visuals
     if(env.scenario === 'INCLINE') {
         const dx = target.x - cannon.x;
         if(dx > 0) target.y = groundY - (dx * Math.tan(env.beta * Math.PI/180));
         else target.y = groundY;
-    } else if (env.scenario === 'GROUND' || env.scenario === 'TOWER') {
-        target.y = groundY;
-    }
+    } else { target.y = groundY; }
 
-    ctx.beginPath();
-    ctx.arc(target.x, target.y, target.r, 0, Math.PI*2);
+    ctx.beginPath(); ctx.arc(target.x, target.y, target.r, 0, Math.PI*2);
     ctx.fillStyle = 'rgba(16, 185, 129, 0.2)'; ctx.fill();
-    ctx.strokeStyle = '#10b981'; ctx.lineWidth=2; ctx.stroke();
-    ctx.fillStyle='#10b981'; ctx.beginPath(); ctx.arc(target.x, target.y, 4, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#10b981'; ctx.lineWidth=3; ctx.stroke();
+    ctx.fillStyle='#10b981'; ctx.beginPath(); ctx.arc(target.x, target.y, 6, 0, Math.PI*2); ctx.fill();
 }
 
 // --- INTERACTION ---
 function fire() {
-    if(particles.length > 0) particles[0].active = false; // Single particle mode for clarity
+    if(particles.length > 0) particles[0].active = false;
     particles = [new Particle(params.u, params.theta)];
     activeId = 0;
+    if(settingsOpen) toggleSettings(); // Close menu on fire
 }
 function clearSim() { particles = []; activeId = -1; updateTelemetry(null); }
 
-canvas.addEventListener('mousedown', e => {
+// Touch Handling
+canvas.addEventListener('touchstart', e => {
+    const touch = e.touches[0];
     const r = canvas.getBoundingClientRect();
-    const mx = e.clientX - r.left;
-    const my = e.clientY - r.top;
-    
-    // Check Cannon
-    if(Math.hypot(mx - cannon.x, my - cannon.y) < 30) {
-        dragging.obj = 'cannon';
-        dragging.offsetX = mx - cannon.x;
-        dragging.offsetY = my - cannon.y;
-    }
-    // Check Target
-    else if(Math.hypot(mx - target.x, my - target.y) < 30) {
+    const mx = touch.clientX - r.left; const my = touch.clientY - r.top;
+    if(Math.hypot(mx - cannon.x, my - cannon.y) < 50) {
+        dragging.obj = 'cannon'; dragging.offsetX = mx - cannon.x; dragging.offsetY = my - cannon.y;
+    } else if(Math.hypot(mx - target.x, my - target.y) < 50) {
         dragging.obj = 'target';
     }
-});
+}, {passive: false});
 
-canvas.addEventListener('mousemove', e => {
+canvas.addEventListener('touchmove', e => {
     if(!dragging.obj) return;
+    const touch = e.touches[0];
     const r = canvas.getBoundingClientRect();
-    const mx = e.clientX - r.left;
-    const my = e.clientY - r.top;
-
+    const mx = touch.clientX - r.left; const my = touch.clientY - r.top;
     if(dragging.obj === 'cannon') {
-        // Limit movement based on scenario
-        if(env.scenario === 'TOWER') {
-            cannon.y = Math.min(Math.max(my - dragging.offsetY, 50), groundY); // Vertical drag
-        } else {
-            cannon.x = Math.max(mx - dragging.offsetX, 20); // Horizontal drag
-        }
-    } else if (dragging.obj === 'target') {
-        target.x = mx;
-    }
-});
+        if(env.scenario === 'TOWER') cannon.y = Math.min(Math.max(my - dragging.offsetY, 50), groundY);
+        else cannon.x = Math.max(mx - dragging.offsetX, 20);
+    } else if (dragging.obj === 'target') { target.x = mx; }
+}, {passive: false});
 
-canvas.addEventListener('mouseup', () => dragging.obj = null);
+canvas.addEventListener('touchend', () => dragging.obj = null);
 
 function showHit() {
     const el = document.getElementById('hit-msg');
-    el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 1000);
+    el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 1000);
 }
 
 function updateTelemetry(p) {
     if(!p) {
-        ['vx','vy','h','r'].forEach(k => document.getElementById('val-'+k).innerText = '0.0');
-        document.getElementById('disp-time').innerText = '0.00';
-        return;
+        ['vx','vy','h','r'].forEach(k => document.getElementById('val-'+k).innerText = '0.0'); return;
     }
-    // Conversions
-    const vx = p.vx;
-    const vy = -p.vy; // Display Up as positive
-    const h = (groundY - p.y - p.r) / SCALE; // Height relative to ground, not incline (standard def)
-    
-    // Range logic varies
     let range = (p.x - p.startX) / SCALE;
     if(env.scenario === 'INCLINE') {
-        // Slant range
-        const dx = p.x - p.startX;
-        const dy = p.startY - p.y;
+        const dx = p.x - p.startX; const dy = p.startY - p.y;
         range = Math.sqrt(dx*dx + dy*dy) / SCALE;
     }
-
-    document.getElementById('val-vx').innerText = vx.toFixed(1);
-    document.getElementById('val-vy').innerText = vy.toFixed(1);
-    document.getElementById('val-h').innerText = h.toFixed(1);
+    document.getElementById('val-vx').innerText = p.vx.toFixed(1);
+    document.getElementById('val-vy').innerText = (-p.vy).toFixed(1);
+    document.getElementById('val-h').innerText = ((groundY - p.y - p.r)/SCALE).toFixed(1);
     document.getElementById('val-r').innerText = range.toFixed(1);
-    document.getElementById('disp-time').innerText = p.time.toFixed(2);
 }
 
 // --- ANIMATION LOOP ---
@@ -592,19 +501,13 @@ let lastTime = 0;
 function loop(timestamp) {
     const dt = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
-
     ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg');
     ctx.fillRect(0, 0, width, height);
-
     drawEnv();
-
     if(particles.length > 0 && activeId !== -1) {
         const p = particles[activeId];
-        p.update(dt * timeScale);
-        p.draw();
-        updateTelemetry(p);
+        p.update(dt * timeScale); p.draw(); updateTelemetry(p);
     }
-
     requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
