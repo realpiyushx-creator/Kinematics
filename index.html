@@ -3,500 +3,663 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JEE Physics Engine: 1D & 2D</title>
+    <title>Newtonian Lab Pro | JEE Simulation</title>
     <style>
         :root {
-            --bg: #09090b;
-            --panel: rgba(24, 24, 27, 0.9);
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.5);
-            --text: #e4e4e7;
-            --vector-x: #ef4444;
-            --vector-y: #22c55e;
-            --path: rgba(255, 255, 255, 0.3);
+            --bg: #0f172a;
+            --panel: rgba(15, 23, 42, 0.95);
+            --primary: #38bdf8; /* Cyan */
+            --accent: #f472b6; /* Pink */
+            --success: #4ade80; /* Green */
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: #334155;
         }
 
         body {
             margin: 0;
             overflow: hidden;
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Courier New', monospace; /* Coding/Technical vibe */
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
         }
 
+        /* CANVAS */
         canvas {
             display: block;
             width: 100vw;
             height: 100vh;
+            cursor: crosshair;
         }
 
-        /* HUD & Controls Overlay */
-        #ui-layer {
+        /* UI OVERLAY */
+        #ui {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 300px;
-            pointer-events: none; /* Let clicks pass through to canvas */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
+        /* CONTROL PANELS */
         .panel {
             background: var(--panel);
-            backdrop-filter: blur(10px);
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 3px solid var(--accent);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 12px;
+            width: 320px;
             pointer-events: auto;
-            margin-bottom: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
-        h2 { margin: 0 0 10px 0; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            margin-bottom: 5px;
+        }
         
-        .control-group { margin-bottom: 12px; }
-        label { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; }
+        h2 { margin: 0; font-size: 1.1rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
         
+        /* CONTROLS */
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .value-display {
+            color: var(--primary);
+            font-weight: bold;
+            font-family: monospace;
+        }
+
         input[type="range"] {
+            -webkit-appearance: none;
             width: 100%;
             height: 4px;
-            background: #3f3f46;
-            appearance: none;
+            background: var(--border);
             border-radius: 2px;
+            outline: none;
         }
+
         input[type="range"]::-webkit-slider-thumb {
-            appearance: none;
+            -webkit-appearance: none;
             width: 16px;
             height: 16px;
-            background: var(--accent);
+            background: var(--text-main);
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 0 10px var(--accent);
+            transition: 0.2s;
+            border: 2px solid var(--primary);
         }
 
-        .btn-row { display: flex; gap: 5px; margin-top: 10px; }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        /* BUTTONS */
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
         button {
-            flex: 1;
-            background: #27272a;
-            border: 1px solid #3f3f46;
-            color: white;
-            padding: 8px;
+            background: #1e293b;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px;
+            border-radius: 6px;
             cursor: pointer;
-            font-family: inherit;
-            font-size: 0.8rem;
+            font-weight: 600;
             transition: all 0.2s;
+            text-transform: uppercase;
+            font-size: 0.8rem;
         }
-        button:hover { background: var(--accent); border-color: var(--accent); }
-        button.active { background: var(--accent); font-weight: bold; box-shadow: 0 0 10px var(--accent-glow); }
 
-        .stats { font-size: 0.75rem; color: #a1a1aa; line-height: 1.4; }
-        .val-high { color: white; font-weight: bold; }
+        button:hover { background: #334155; border-color: var(--primary); }
+        button.active { background: var(--primary); color: #0f172a; border-color: var(--primary); }
+        
+        button.fire-btn {
+            background: linear-gradient(135deg, var(--primary), #2563eb);
+            color: white;
+            border: none;
+            grid-column: span 2;
+            padding: 14px;
+            font-size: 1rem;
+            letter-spacing: 2px;
+        }
+        button.fire-btn:active { transform: scale(0.98); }
 
-        /* Mode Selector */
-        .mode-tabs {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
+        /* TOGGLES */
+        .toggle-row { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; cursor: pointer; }
+        .checkbox-custom {
+            width: 18px; height: 18px; border: 2px solid var(--text-muted); border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .checkbox-custom.checked { border-color: var(--accent); background: var(--accent); }
+        .checkbox-custom.checked::after { content: '✓'; color: white; font-size: 12px; }
+
+        /* STATS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
+            font-family: monospace;
+            font-size: 0.9rem;
         }
+        .stat-box {
+            background: rgba(0,0,0,0.3);
+            padding: 8px;
+            border-radius: 4px;
+            border-left: 2px solid var(--text-muted);
+        }
+        .stat-val { display: block; font-size: 1.1em; font-weight: bold; color: var(--text-main); }
+        .stat-label { font-size: 0.75em; color: var(--text-muted); }
+
+        /* TARGET HIT MESSAGE */
+        #hit-message {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--success);
+            text-shadow: 0 0 20px var(--success);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        /* HINT BOX */
+        .hint {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            font-style: italic;
+            border-top: 1px solid var(--border);
+            padding-top: 10px;
+        }
+
     </style>
 </head>
 <body>
 
-    <div class="mode-tabs">
-        <button onclick="setMode('1D')" id="btn-1d" class="active">1D Motion</button>
-        <button onclick="setMode('2D')" id="btn-2d">2D Projectile</button>
-        <button onclick="setMode('REL')" id="btn-rel">Relative (Rain)</button>
-    </div>
-
-    <div id="ui-layer">
-        <div class="panel">
-            <h2>Simulation Config</h2>
-            
-            <div id="controls-container">
-                </div>
-
-            <div class="btn-row">
-                <button onclick="resetSim()">RESET / FIRE</button>
-                <button onclick="togglePause()" id="pause-btn">PAUSE</button>
-            </div>
-            <div class="btn-row">
-                 <button onclick="toggleSlowMo()" id="slow-btn">SLOW MO</button>
-                 <button onclick="toggleVectors()" id="vec-btn" class="active">VECTORS</button>
-            </div>
-        </div>
-
-        <div class="panel">
-            <h2>Live Data</h2>
-            <div class="stats" id="stats-display">
-                Waiting for launch...
-            </div>
-        </div>
-    </div>
+    <div id="hit-message">TARGET HIT!</div>
 
     <canvas id="simCanvas"></canvas>
 
+    <div id="ui">
+        <div class="panel">
+            <div class="panel-header">
+                <h2>Control Deck</h2>
+                <div style="font-size:0.8rem; color:var(--primary)">v2.0</div>
+            </div>
+
+            <div class="btn-grid">
+                <button id="btn-1d" onclick="setMode('1D')">1D Motion</button>
+                <button id="btn-2d" class="active" onclick="setMode('2D')">2D Projectile</button>
+            </div>
+
+            <hr style="border:0; border-top:1px solid var(--border); width:100%;">
+
+            <div class="control-group">
+                <div class="label-row"><span>Initial Velocity ($u$)</span> <span id="disp-u" class="value-display">40 m/s</span></div>
+                <input type="range" id="input-u" min="5" max="100" value="45" oninput="updateVal('u', this.value)">
+            </div>
+
+            <div class="control-group" id="group-angle">
+                <div class="label-row"><span>Launch Angle ($\theta$)</span> <span id="disp-theta" class="value-display">45°</span></div>
+                <input type="range" id="input-theta" min="0" max="90" value="45" oninput="updateVal('theta', this.value)">
+            </div>
+
+            <div class="control-group">
+                <div class="label-row"><span>Gravity ($g$)</span> <span id="disp-g" class="value-display">9.8 m/s²</span></div>
+                <input type="range" id="input-g" min="1" max="25" value="9.8" step="0.1" oninput="updateVal('g', this.value)">
+            </div>
+
+            <hr style="border:0; border-top:1px solid var(--border); width:100%;">
+
+            <div class="toggle-row" onclick="toggleDrag()">
+                <div id="check-drag" class="checkbox-custom"></div>
+                <span>Enable Air Resistance (Drag)</span>
+            </div>
+
+            <div class="control-group" id="drag-slider" style="display:none; margin-left: 28px;">
+                 <div class="label-row"><span>Drag Coeff</span> <span id="disp-drag" class="value-display">0.05</span></div>
+                 <input type="range" min="0.01" max="0.5" step="0.01" value="0.05" oninput="updateVal('drag', this.value)">
+            </div>
+
+            <div class="toggle-row" onclick="toggleBounce()">
+                <div id="check-bounce" class="checkbox-custom checked"></div>
+                <span>Elastic Collisions (Bounce)</span>
+            </div>
+
+            <div class="control-group">
+                 <div class="label-row"><span>Time Scale (Slow Mo)</span> <span id="disp-time" class="value-display">1.0x</span></div>
+                 <input type="range" min="0.1" max="2.0" step="0.1" value="1.0" oninput="timeScale = parseFloat(this.value); document.getElementById('disp-time').innerText = this.value + 'x'">
+            </div>
+
+            <hr style="border:0; border-top:1px solid var(--border); width:100%;">
+
+            <div class="btn-grid">
+                <button onclick="clearTrails()">Clear Ghosts</button>
+                <button onclick="resetSim()">Reset All</button>
+            </div>
+            <button class="fire-btn" onclick="fire()">LAUNCH PROJECTILE</button>
+        </div>
+
+        <div class="panel" style="height: fit-content;">
+            <div class="panel-header">
+                <h2>Real-Time Telemetry</h2>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-box" style="border-color: #ef4444;">
+                    <span class="stat-val" id="stat-vx">0.0</span>
+                    <span class="stat-label">Vx (Horizontal)</span>
+                </div>
+                <div class="stat-box" style="border-color: #22c55e;">
+                    <span class="stat-val" id="stat-vy">0.0</span>
+                    <span class="stat-label">Vy (Vertical)</span>
+                </div>
+                <div class="stat-box" style="border-color: #eab308;">
+                    <span class="stat-val" id="stat-h">0.0</span>
+                    <span class="stat-label">Height (m)</span>
+                </div>
+                <div class="stat-box" style="border-color: #3b82f6;">
+                    <span class="stat-val" id="stat-r">0.0</span>
+                    <span class="stat-label">Range X (m)</span>
+                </div>
+            </div>
+
+            <div class="hint">
+                <strong>Pro Tip:</strong> Click and drag the <span style="color:var(--accent)">Pink Circle</span> to move the target. Try to hit it!
+            </div>
+            <div class="hint" id="drag-hint" style="display:none; color: #f472b6;">
+                <strong>Note:</strong> With Drag enabled, mass matters. The path is no longer a perfect parabola. $a_x \neq 0$.
+            </div>
+        </div>
+    </div>
+
 <script>
 /**
- * PHYSICS ENGINE CORE
- * Fairoosh's Custom Build
+ * NEWTONIAN LAB PRO
+ * 10x Better Engine
  */
 
 const canvas = document.getElementById('simCanvas');
 const ctx = canvas.getContext('2d');
 
-// State
+// --- CONFIGURATION ---
+const SCALE = 15; // 15 pixels = 1 meter
 let width, height;
-let animationId;
-let lastTime = 0;
-let isPaused = false;
-let isSlowMo = false;
-let showVectors = true;
-let mode = '1D'; // '1D', '2D', 'REL' (Relative)
 
-// Physics Constants
-const PIXELS_PER_METER = 20; // Scale: 20px = 1 meter
-let GRAVITY = 9.8; 
-let TIME_STEP = 1/60;
+// Simulation State
+let particles = []; // Array to hold multiple balls (Ghost trails)
+let activeId = -1;  // ID of the currently moving ball
+let mode = '2D';
+let timeScale = 1.0;
+let isDraggingTarget = false;
 
-// Simulation Objects
-let particle = {
-    x: 0, y: 0,
-    vx: 0, vy: 0,
-    radius: 10,
-    color: '#3b82f6',
-    trail: [],
-    mass: 1,
-    restitution: 0.7 // Bounciness
+// Physics Params
+let params = {
+    u: 45,
+    theta: 45,
+    g: 9.8,
+    drag: 0.0, // Air resistance coefficient
+    bounciness: 0.7,
+    hasBounce: true
 };
 
-let rain = []; // For relative mode
-let man = { x: 0, vx: 0 }; // For relative mode
-
-// Config Inputs
-let config = {
-    u: 40,      // Initial Velocity
-    theta: 45,  // Angle
-    h: 100,     // Initial Height (1D)
-    g: 9.8,     // Gravity
-    rainAngle: 0, // Vertical
-    manSpeed: 0
+// The Target
+let target = {
+    x: 600,
+    y: 300, // Will set relative to ground
+    radius: 30
 };
 
 // --- INITIALIZATION ---
-
 function resize() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
+    // Reset target to ground level if uninitialized
+    if (target.y === 300) target.y = height - 100;
 }
 window.addEventListener('resize', resize);
 resize();
 
-function setMode(newMode) {
-    mode = newMode;
-    document.querySelectorAll('.mode-tabs button').forEach(b => b.classList.remove('active'));
-    document.getElementById(`btn-${newMode.toLowerCase()}`).classList.add('active');
-    updateControlsUI();
-    resetSim();
+// --- INPUT HANDLING ---
+function updateVal(key, val) {
+    val = parseFloat(val);
+    if(key === 'u') { params.u = val; document.getElementById('disp-u').innerText = val + ' m/s'; }
+    if(key === 'theta') { params.theta = val; document.getElementById('disp-theta').innerText = val + '°'; }
+    if(key === 'g') { params.g = val; document.getElementById('disp-g').innerText = val + ' m/s²'; }
+    if(key === 'drag') { params.drag = val; document.getElementById('disp-drag').innerText = val; }
 }
 
-function updateControlsUI() {
-    const container = document.getElementById('controls-container');
-    let html = '';
-
+function setMode(m) {
+    mode = m;
+    document.getElementById('btn-1d').className = mode === '1D' ? 'active' : '';
+    document.getElementById('btn-2d').className = mode === '2D' ? 'active' : '';
+    
+    // UI Adjustments
+    const angleRow = document.getElementById('group-angle');
     if (mode === '1D') {
-        html += createSlider('Height (m)', 'h', 0, 300, config.h);
-        html += createSlider('Gravity (m/s²)', 'g', 1, 20, config.g);
-        html += createSlider('Bounciness', 'res', 0, 1, particle.restitution, 0.1);
-    } else if (mode === '2D') {
-        html += createSlider('Velocity (m/s)', 'u', 10, 100, config.u);
-        html += createSlider('Angle (deg)', 'theta', 0, 90, config.theta);
-        html += createSlider('Gravity', 'g', 1, 20, config.g);
-    } else if (mode === 'REL') {
-        html += createSlider('Man Speed (m/s)', 'manSpeed', -20, 20, config.manSpeed);
-        html += createSlider('Rain Vertical Speed', 'u', 5, 50, 20); // Reusing u for rain speed
-        html += '<p style="font-size:0.8rem; color:#666">Goal: Adjust Man Speed to see rain fall vertically relative to him.</p>';
+        angleRow.style.opacity = '0.5';
+        angleRow.style.pointerEvents = 'none';
+        params.theta = 90; // Lock to vertical
+        document.getElementById('disp-theta').innerText = "90° (Locked)";
+    } else {
+        angleRow.style.opacity = '1';
+        angleRow.style.pointerEvents = 'auto';
+        params.theta = parseFloat(document.getElementById('input-theta').value);
+        document.getElementById('disp-theta').innerText = params.theta + "°";
+    }
+    clearTrails();
+}
+
+function toggleDrag() {
+    const el = document.getElementById('check-drag');
+    const slider = document.getElementById('drag-slider');
+    const hint = document.getElementById('drag-hint');
+    
+    if (el.classList.contains('checked')) {
+        el.classList.remove('checked');
+        params.drag = 0.0;
+        slider.style.display = 'none';
+        hint.style.display = 'none';
+    } else {
+        el.classList.add('checked');
+        params.drag = parseFloat(document.querySelector('#drag-slider input').value);
+        slider.style.display = 'flex';
+        hint.style.display = 'block';
+    }
+}
+
+function toggleBounce() {
+    const el = document.getElementById('check-bounce');
+    el.classList.toggle('checked');
+    params.hasBounce = el.classList.contains('checked');
+}
+
+// --- MOUSE INTERACTION (TARGET) ---
+canvas.addEventListener('mousedown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    
+    // Check if clicking target
+    const dist = Math.hypot(mx - target.x, my - target.y);
+    if (dist < target.radius + 10) {
+        isDraggingTarget = true;
+    }
+});
+
+canvas.addEventListener('mousemove', (e) => {
+    if (isDraggingTarget) {
+        target.x = e.clientX;
+        target.y = e.clientY;
+    }
+});
+
+canvas.addEventListener('mouseup', () => isDraggingTarget = false);
+
+
+// --- PHYSICS ENGINE ---
+
+class Particle {
+    constructor(u, theta, isGhost = false) {
+        this.rad = 8;
+        this.x = 50; // Start position X
+        this.y = height - 50; // Start position Y
+        
+        // Convert Polar to Cartesian
+        const rad = theta * (Math.PI / 180);
+        this.vx = u * Math.cos(rad);
+        this.vy = -u * Math.sin(rad); // Negative is UP in canvas
+        
+        this.mass = 1.0;
+        this.active = true;
+        this.isGhost = isGhost;
+        this.trail = [];
+        this.color = isGhost ? 'rgba(255, 255, 255, 0.2)' : '#38bdf8';
+        this.startX = this.x;
+        this.startY = this.y;
     }
 
-    container.innerHTML = html;
-}
+    update(dt) {
+        if (!this.active) return;
 
-function createSlider(label, key, min, max, val, step=1) {
-    return `
-        <div class="control-group">
-            <label>${label} <span id="val-${key}">${val}</span></label>
-            <input type="range" min="${min}" max="${max}" value="${val}" step="${step}" 
-            oninput="updateConfig('${key}', this.value)">
-        </div>
-    `;
-}
+        // 1. Calculate Forces
+        let Fx = 0;
+        let Fy = params.g * this.mass * SCALE; // Gravity (Scaled)
 
-function updateConfig(key, value) {
-    value = parseFloat(value);
-    document.getElementById(`val-${key}`).innerText = value;
-    
-    if(key === 'res') particle.restitution = value;
-    else config[key] = value;
-
-    if (mode === 'REL') resetSim(); // Instant update for rain
-}
-
-function resetSim() {
-    GRAVITY = config.g;
-    particle.trail = [];
-    
-    if (mode === '1D') {
-        particle.x = width / 2;
-        particle.y = height - (config.h * PIXELS_PER_METER) - 20; // Ground offset
-        particle.vx = 0;
-        particle.vy = 0;
-    } else if (mode === '2D') {
-        particle.x = 50;
-        particle.y = height - 50;
-        const rad = config.theta * (Math.PI / 180);
-        particle.vx = config.u * Math.cos(rad);
-        particle.vy = -config.u * Math.sin(rad); // Negative is UP in Canvas
-    } else if (mode === 'REL') {
-        man.x = width/2;
-        man.vx = config.manSpeed;
-        rain = [];
-        // Spawn drops
-        for(let i=0; i<50; i++) {
-            rain.push({
-                x: Math.random() * width,
-                y: Math.random() * height,
-                vy: config.u
-            });
+        // Air Resistance (Drag Force) = -k * v
+        if (params.drag > 0) {
+            Fx += -params.drag * this.vx * SCALE; 
+            Fy += -params.drag * this.vy * SCALE;
         }
-    }
-}
 
-// --- PHYSICS LOOP ---
+        // 2. Acceleration (a = F/m)
+        let ax = Fx / this.mass;
+        let ay = Fy / this.mass;
 
-function update(dt) {
-    if (isPaused) return;
-    
-    // Time scaling
-    const simDt = isSlowMo ? dt * 0.2 : dt;
+        // 3. Integration (Euler)
+        this.vx += ax * dt;
+        this.vy += ay * dt;
+        this.x += this.vx * dt * SCALE; // Apply velocity to position
+        this.y += this.vy * dt * SCALE; // Note: gravity accel is already scaled in Fy
 
-    if (mode === '1D') {
-        // Gravity
-        particle.vy += GRAVITY * PIXELS_PER_METER * simDt;
-        particle.y += particle.vy * simDt;
-
-        // Ground Collision
-        if (particle.y + particle.radius > height) {
-            particle.y = height - particle.radius;
-            particle.vy *= -particle.restitution;
+        // 4. Ground Collision
+        if (this.y + this.rad > height) {
+            this.y = height - this.rad;
             
-            // Stop micro-bouncing
-            if (Math.abs(particle.vy) < 20) particle.vy = 0;
-        }
-
-    } else if (mode === '2D') {
-        // Gravity only affects Y
-        particle.vy += GRAVITY * PIXELS_PER_METER * simDt;
-        
-        particle.x += particle.vx * simDt * PIXELS_PER_METER; // Note: scaling X to match meters
-        particle.y += particle.vy * simDt; // scaling Y happened in gravity
-
-        // Trail Logic
-        if (frameCounter % 5 === 0) {
-            particle.trail.push({x: particle.x, y: particle.y});
-            if (particle.trail.length > 50) particle.trail.shift();
-        }
-
-        // Floor collision (Stop sim)
-        if (particle.y + particle.radius > height) {
-            particle.y = height - particle.radius;
-            particle.vx = 0;
-            particle.vy = 0;
-        }
-    } else if (mode === 'REL') {
-        man.vx = config.manSpeed;
-        
-        // Update rain
-        rain.forEach(drop => {
-            drop.y += drop.vy * PIXELS_PER_METER * simDt;
-            drop.x -= man.vx * PIXELS_PER_METER * simDt; // Relative X motion
-
-            if (drop.y > height) {
-                drop.y = 0;
-                drop.x = Math.random() * width;
+            if (params.hasBounce) {
+                this.vy *= -params.bounciness;
+                // Friction on bounce
+                this.vx *= 0.9; 
+                
+                // Stop if too slow
+                if (Math.abs(this.vy) < 20) this.vy = 0;
+                if (Math.abs(this.vx) < 5) this.vx = 0;
+                
+                if (this.vx === 0 && this.vy === 0) this.active = false;
+            } else {
+                this.active = false;
             }
-            if (drop.x < 0) drop.x = width;
-            if (drop.x > width) drop.x = 0;
-        });
+        }
+
+        // 5. Wall Collision
+        if (this.x > width || this.x < 0) this.active = false;
+
+        // 6. Trail Logic
+        if (this.active) {
+            this.trail.push({x: this.x, y: this.y});
+            if (this.trail.length > 200) this.trail.shift();
+        }
+
+        // 7. Target Hit Check
+        if (!this.isGhost) {
+            const dist = Math.hypot(this.x - target.x, this.y - target.y);
+            if (dist < this.rad + target.radius) {
+                showHitMessage();
+            }
+        }
     }
-}
 
-// --- RENDERING ---
-
-let frameCounter = 0;
-
-function draw() {
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg');
-    ctx.fillRect(0, 0, width, height);
-    
-    // Draw Grid
-    drawGrid();
-
-    if (mode === '1D' || mode === '2D') {
+    draw() {
         // Draw Trail
-        if (mode === '2D') {
+        if (this.trail.length > 1) {
             ctx.beginPath();
-            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-            ctx.lineWidth = 2;
-            particle.trail.forEach((p, i) => {
-                if(i===0) ctx.moveTo(p.x, p.y);
-                else ctx.lineTo(p.x, p.y);
-            });
+            ctx.strokeStyle = this.isGhost ? this.color : `rgba(56, 189, 248, 0.5)`;
+            ctx.lineWidth = this.isGhost ? 1 : 3;
+            for (let i = 0; i < this.trail.length; i++) {
+                ctx.lineTo(this.trail[i].x, this.trail[i].y);
+            }
             ctx.stroke();
         }
 
         // Draw Ball
         ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
-        ctx.fillStyle = particle.color;
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = particle.color;
+        ctx.arc(this.x, this.y, this.rad, 0, Math.PI * 2);
+        ctx.fillStyle = this.active ? this.color : '#555';
+        ctx.shadowBlur = this.isGhost ? 0 : 15;
+        ctx.shadowColor = this.color;
         ctx.fill();
         ctx.shadowBlur = 0;
-        ctx.closePath();
 
-        // Draw Vectors
-        if (showVectors) drawVectors();
-        
-        updateStats();
-    } else if (mode === 'REL') {
-        drawRainSim();
+        // Draw Vectors (Only for active non-ghost)
+        if (!this.isGhost && this.active) {
+            this.drawVectors();
+        }
     }
 
-    frameCounter++;
-}
-
-function drawGrid() {
-    ctx.strokeStyle = '#1e1e20';
-    ctx.lineWidth = 1;
-    const size = PIXELS_PER_METER * 5; // 5 meter grid
-    
-    // Draw ground line
-    ctx.beginPath();
-    ctx.strokeStyle = '#3f3f46';
-    ctx.lineWidth = 2;
-    ctx.moveTo(0, height);
-    ctx.lineTo(width, height);
-    ctx.stroke();
-}
-
-function drawVectors() {
-    const scale = 0.5; // Scale down vector visual length
-    
-    // Velocity Y (Green)
-    drawArrow(particle.x, particle.y, particle.x, particle.y + particle.vy * scale, '#22c55e');
-    
-    // Velocity X (Red) - Only for 2D
-    if (mode === '2D') {
-        drawArrow(particle.x, particle.y, particle.x + (particle.vx * PIXELS_PER_METER * scale), particle.y, '#ef4444');
+    drawVectors() {
+        const vScale = 1.5;
+        // Vx
+        drawArrow(this.x, this.y, this.x + this.vx * vScale, this.y, '#ef4444');
+        // Vy
+        drawArrow(this.x, this.y, this.x, this.y + this.vy * vScale, '#22c55e');
     }
 }
 
-function drawArrow(fromx, fromy, tox, toy, color) {
-    const headlen = 10;
-    const dx = tox - fromx;
-    const dy = toy - fromy;
-    const angle = Math.atan2(dy, dx);
-    
+function drawArrow(x1, y1, x2, y2, color) {
+    const head = 8;
+    const angle = Math.atan2(y2 - y1, x2 - x1);
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(fromx, fromy);
-    ctx.lineTo(tox, toy);
-    ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
-    ctx.moveTo(tox, toy);
-    ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.lineTo(x2 - head * Math.cos(angle - Math.PI/6), y2 - head * Math.sin(angle - Math.PI/6));
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - head * Math.cos(angle + Math.PI/6), y2 - head * Math.sin(angle + Math.PI/6));
     ctx.stroke();
 }
 
-function drawRainSim() {
-    // Draw Man
-    ctx.fillStyle = '#3b82f6';
-    ctx.fillRect(width/2 - 10, height - 60, 20, 60);
-    
-    // Draw Rain
-    ctx.strokeStyle = '#60a5fa';
+function drawTarget() {
+    ctx.beginPath();
+    ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.2)'; // Inner fill
+    ctx.fill();
+    ctx.strokeStyle = 'var(--accent)';
     ctx.lineWidth = 2;
-    rain.forEach(r => {
-        ctx.beginPath();
-        // Rain is falling down (positive y), but looks slanted due to relative x
-        const slant = -man.vx * 2; 
-        ctx.moveTo(r.x, r.y);
-        ctx.lineTo(r.x + slant, r.y + 15);
-        ctx.stroke();
-    });
-
-    // Umbrella Vector
-    const rainVel = config.u;
-    const manVel = config.manSpeed;
-    const angle = Math.atan2(manVel, rainVel) * (180/Math.PI);
+    ctx.setLineDash([5, 5]);
+    ctx.stroke();
+    ctx.setLineDash([]);
     
-    document.getElementById('stats-display').innerHTML = `
-        <span class="val-high">RELATIVE VELOCITY:</span><br>
-        V_rain_ground = ${rainVel} m/s (Down)<br>
-        V_man = ${manVel} m/s <br>
-        <strong>Umbrella Angle needed: ${Math.abs(angle.toFixed(1))}° with Vertical</strong>
-    `;
+    // Bullseye
+    ctx.beginPath();
+    ctx.arc(target.x, target.y, 5, 0, Math.PI*2);
+    ctx.fillStyle = 'var(--accent)';
+    ctx.fill();
 }
 
-function updateStats() {
-    // Convert px/s back to m/s for display
-    const vy = -(particle.vy / PIXELS_PER_METER).toFixed(1); // Negate because Up is -Y in canvas
-    const vx = particle.vx.toFixed(1);
-    const h = ((height - particle.y - particle.radius) / PIXELS_PER_METER).toFixed(1);
-    
-    let html = `
-        <span style="color:#22c55e">Vy: ${vy} m/s</span><br>
-        <span style="color:#ef4444">Vx: ${vx} m/s</span><br>
-        Height: ${h} m
-    `;
-    
-    if (mode === '2D') {
-        const v_net = Math.sqrt(vx*vx + vy*vy).toFixed(1);
-        html += `<br>V_net: ${v_net} m/s`;
+// --- MAIN LOOP ---
+
+function fire() {
+    // Turn current active particle into a ghost
+    if (particles.length > 0) {
+        particles[particles.length - 1].isGhost = true;
+        particles[particles.length - 1].color = 'rgba(255,255,255,0.1)';
+        particles[particles.length - 1].active = false; // Stop simulating old ones to save CPU
     }
 
-    document.getElementById('stats-display').innerHTML = html;
+    const p = new Particle(params.u, params.theta);
+    particles.push(p);
+    activeId = particles.length - 1;
 }
 
-// --- LOOP CONTROL ---
+function clearTrails() {
+    particles = [];
+    activeId = -1;
+    // reset stats
+    document.getElementById('stat-vx').innerText = "0.0";
+    document.getElementById('stat-vy').innerText = "0.0";
+    document.getElementById('stat-h').innerText = "0.0";
+    document.getElementById('stat-r').innerText = "0.0";
+}
 
-function loop(timestamp) {
+function resetSim() {
+    clearTrails();
+    target.x = 600;
+    target.y = height - 100;
+}
+
+function showHitMessage() {
+    const msg = document.getElementById('hit-message');
+    msg.style.opacity = '1';
+    msg.style.transform = 'translate(-50%, -50%) scale(1.2)';
+    setTimeout(() => {
+        msg.style.opacity = '0';
+        msg.style.transform = 'translate(-50%, -50%) scale(1)';
+    }, 1500);
+}
+
+let lastTime = 0;
+function animate(timestamp) {
     const dt = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
-    
-    update(dt);
-    draw();
-    
-    animationId = requestAnimationFrame(loop);
-}
+    // Clear Screen
+    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg');
+    ctx.fillRect(0, 0, width, height);
 
-// Button Helpers
-function togglePause() {
-    isPaused = !isPaused;
-    document.getElementById('pause-btn').classList.toggle('active');
-}
-function toggleSlowMo() {
-    isSlowMo = !isSlowMo;
-    document.getElementById('slow-btn').classList.toggle('active');
-}
-function toggleVectors() {
-    showVectors = !showVectors;
-    document.getElementById('vec-btn').classList.toggle('active');
+    // Draw Grid (Floor)
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, height);
+    ctx.lineTo(width, height);
+    ctx.stroke();
+
+    // Draw Target
+    drawTarget();
+
+    // Update & Draw Particles
+    particles.forEach(p => {
+        p.update(dt * timeScale); // Apply time scaling
+        p.draw();
+    });
+
+    // Update Stats for active particle
+    if (activeId !== -1 && particles[activeId]) {
+        const p = particles[activeId];
+        // Convert canvas units back to physics units for display
+        // Note: We flip Vy sign for display so Up is positive
+        const vyDisplay = (-p.vy).toFixed(1); 
+        const vxDisplay = (p.vx).toFixed(1);
+        const hDisplay = ((height - p.y - p.rad)/SCALE).toFixed(1);
+        const rDisplay = ((p.x - p.startX)/SCALE).toFixed(1);
+
+        document.getElementById('stat-vx').innerText = vxDisplay;
+        document.getElementById('stat-vy').innerText = vyDisplay;
+        document.getElementById('stat-h').innerText = Math.max(0, hDisplay);
+        document.getElementById('stat-r').innerText = rDisplay;
+    }
+
+    requestAnimationFrame(animate);
 }
 
 // Start
-setMode('1D'); // Default
-updateControlsUI();
-requestAnimationFrame(loop);
+requestAnimationFrame(animate);
 
 </script>
 </body>
