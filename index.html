@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Newtonian Lab Pro | JEE Simulation</title>
+    <title>Newtonian Lab Pro v3.0 | Surface Edition</title>
     <style>
         :root {
             --bg: #0f172a;
             --panel: rgba(15, 23, 42, 0.95);
             --primary: #38bdf8; /* Cyan */
             --accent: #f472b6; /* Pink */
-            --success: #4ade80; /* Green */
+            --floor: #1e293b;
             --text-main: #e2e8f0;
-            --text-muted: #94a3b8;
             --border: #334155;
         }
 
@@ -25,12 +24,10 @@
             user-select: none;
         }
 
-        /* CANVAS */
         canvas {
             display: block;
             width: 100vw;
             height: 100vh;
-            cursor: crosshair;
         }
 
         /* UI OVERLAY */
@@ -47,7 +44,7 @@
             box-sizing: border-box;
         }
 
-        /* CONTROL PANELS */
+        /* PANELS */
         .panel {
             background: var(--panel);
             backdrop-filter: blur(12px);
@@ -56,303 +53,170 @@
             border-radius: 12px;
             width: 320px;
             pointer-events: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
             gap: 15px;
-            max-height: 90vh;
+            max-height: 85vh;
             overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 10px;
-            margin-bottom: 5px;
+        /* Mobile adjustments for panel */
+        @media (max-width: 768px) {
+            .panel {
+                width: 260px;
+                padding: 15px;
+                max-height: 60vh;
+            }
+            #ui { padding: 10px; flex-direction: column; gap: 10px; }
+            .panel:last-child { 
+                position: absolute; 
+                bottom: 80px; /* Above the floor */
+                right: 10px; 
+                width: auto;
+            }
         }
-        
-        h2 { margin: 0; font-size: 1.1rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
+
+        h2 { margin: 0; font-size: 1rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
         
         /* CONTROLS */
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .label-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        .value-display {
-            color: var(--primary);
-            font-weight: bold;
-            font-family: monospace;
-        }
+        .control-group { display: flex; flex-direction: column; gap: 5px; }
+        .label-row { display: flex; justify-content: space-between; font-size: 0.8rem; color: #94a3b8; }
+        .value-display { color: var(--primary); font-weight: bold; font-family: monospace; }
 
         input[type="range"] {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 4px;
-            background: var(--border);
-            border-radius: 2px;
-            outline: none;
+            -webkit-appearance: none; width: 100%; height: 4px; background: var(--border); border-radius: 2px; outline: none;
         }
-
         input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            background: var(--text-main);
-            border-radius: 50%;
-            cursor: pointer;
-            transition: 0.2s;
-            border: 2px solid var(--primary);
+            -webkit-appearance: none; width: 16px; height: 16px; background: var(--text-main); border-radius: 50%; cursor: pointer; border: 2px solid var(--primary);
         }
 
-        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
-
-        /* BUTTONS */
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        
         button {
-            background: #1e293b;
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-            text-transform: uppercase;
-            font-size: 0.8rem;
+            background: #1e293b; border: 1px solid var(--border); color: var(--text-main); padding: 10px;
+            border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.75rem; text-transform: uppercase;
         }
-
-        button:hover { background: #334155; border-color: var(--primary); }
         button.active { background: var(--primary); color: #0f172a; border-color: var(--primary); }
-        
         button.fire-btn {
-            background: linear-gradient(135deg, var(--primary), #2563eb);
-            color: white;
-            border: none;
-            grid-column: span 2;
-            padding: 14px;
-            font-size: 1rem;
-            letter-spacing: 2px;
+            background: linear-gradient(135deg, var(--primary), #2563eb); color: white; border: none; grid-column: span 2; padding: 12px; font-size: 0.9rem;
         }
-        button.fire-btn:active { transform: scale(0.98); }
-
-        /* TOGGLES */
-        .toggle-row { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; cursor: pointer; }
-        .checkbox-custom {
-            width: 18px; height: 18px; border: 2px solid var(--text-muted); border-radius: 4px;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .checkbox-custom.checked { border-color: var(--accent); background: var(--accent); }
-        .checkbox-custom.checked::after { content: '✓'; color: white; font-size: 12px; }
 
         /* STATS */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            font-family: monospace;
-            font-size: 0.9rem;
-        }
-        .stat-box {
-            background: rgba(0,0,0,0.3);
-            padding: 8px;
-            border-radius: 4px;
-            border-left: 2px solid var(--text-muted);
-        }
-        .stat-val { display: block; font-size: 1.1em; font-weight: bold; color: var(--text-main); }
-        .stat-label { font-size: 0.75em; color: var(--text-muted); }
-
-        /* TARGET HIT MESSAGE */
-        #hit-message {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 3rem;
-            font-weight: 900;
-            color: var(--success);
-            text-shadow: 0 0 20px var(--success);
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-            z-index: 100;
-        }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-family: monospace; font-size: 0.85rem; }
+        .stat-box { background: rgba(0,0,0,0.3); padding: 6px; border-radius: 4px; border-left: 2px solid #555; }
+        .stat-val { display: block; font-size: 1.1em; font-weight: bold; color: white; }
         
-        /* HINT BOX */
-        .hint {
-            margin-top: 10px;
-            font-size: 0.8rem;
-            color: #94a3b8;
-            font-style: italic;
-            border-top: 1px solid var(--border);
-            padding-top: 10px;
+        #hit-message {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 2.5rem; font-weight: 900; color: #4ade80; opacity: 0; pointer-events: none;
+            text-shadow: 0 0 20px #4ade80; transition: opacity 0.3s;
         }
-
     </style>
 </head>
 <body>
 
     <div id="hit-message">TARGET HIT!</div>
-
     <canvas id="simCanvas"></canvas>
 
     <div id="ui">
         <div class="panel">
-            <div class="panel-header">
-                <h2>Control Deck</h2>
-                <div style="font-size:0.8rem; color:var(--primary)">v2.0</div>
-            </div>
-
+            <div class="label-row" style="margin-bottom:5px;"><span>NEWTON LAB v3.0</span> <span>SURFACE ED.</span></div>
+            
             <div class="btn-grid">
-                <button id="btn-1d" onclick="setMode('1D')">1D Motion</button>
+                <button id="btn-1d" onclick="setMode('1D')">1D Drop</button>
                 <button id="btn-2d" class="active" onclick="setMode('2D')">2D Projectile</button>
             </div>
 
-            <hr style="border:0; border-top:1px solid var(--border); width:100%;">
-
             <div class="control-group">
-                <div class="label-row"><span>Initial Velocity ($u$)</span> <span id="disp-u" class="value-display">40 m/s</span></div>
-                <input type="range" id="input-u" min="5" max="100" value="45" oninput="updateVal('u', this.value)">
+                <div class="label-row"><span>Velocity ($u$)</span> <span id="disp-u" class="value-display">45 m/s</span></div>
+                <input type="range" min="5" max="100" value="45" oninput="updateVal('u', this.value)">
             </div>
 
             <div class="control-group" id="group-angle">
-                <div class="label-row"><span>Launch Angle ($\theta$)</span> <span id="disp-theta" class="value-display">45°</span></div>
+                <div class="label-row"><span>Angle ($\theta$)</span> <span id="disp-theta" class="value-display">45°</span></div>
                 <input type="range" id="input-theta" min="0" max="90" value="45" oninput="updateVal('theta', this.value)">
             </div>
 
             <div class="control-group">
                 <div class="label-row"><span>Gravity ($g$)</span> <span id="disp-g" class="value-display">9.8 m/s²</span></div>
-                <input type="range" id="input-g" min="1" max="25" value="9.8" step="0.1" oninput="updateVal('g', this.value)">
+                <input type="range" min="1" max="25" value="9.8" step="0.1" oninput="updateVal('g', this.value)">
             </div>
-
-            <hr style="border:0; border-top:1px solid var(--border); width:100%;">
-
-            <div class="toggle-row" onclick="toggleDrag()">
-                <div id="check-drag" class="checkbox-custom"></div>
-                <span>Enable Air Resistance (Drag)</span>
-            </div>
-
-            <div class="control-group" id="drag-slider" style="display:none; margin-left: 28px;">
-                 <div class="label-row"><span>Drag Coeff</span> <span id="disp-drag" class="value-display">0.05</span></div>
-                 <input type="range" min="0.01" max="0.5" step="0.01" value="0.05" oninput="updateVal('drag', this.value)">
-            </div>
-
-            <div class="toggle-row" onclick="toggleBounce()">
-                <div id="check-bounce" class="checkbox-custom checked"></div>
-                <span>Elastic Collisions (Bounce)</span>
-            </div>
-
+            
             <div class="control-group">
-                 <div class="label-row"><span>Time Scale (Slow Mo)</span> <span id="disp-time" class="value-display">1.0x</span></div>
+                 <div class="label-row"><span>Time Scale</span> <span id="disp-time" class="value-display">1.0x</span></div>
                  <input type="range" min="0.1" max="2.0" step="0.1" value="1.0" oninput="timeScale = parseFloat(this.value); document.getElementById('disp-time').innerText = this.value + 'x'">
             </div>
 
-            <hr style="border:0; border-top:1px solid var(--border); width:100%;">
-
             <div class="btn-grid">
-                <button onclick="clearTrails()">Clear Ghosts</button>
-                <button onclick="resetSim()">Reset All</button>
+                <button onclick="clearTrails()">Clear</button>
+                <button onclick="resetSim()">Reset</button>
             </div>
-            <button class="fire-btn" onclick="fire()">LAUNCH PROJECTILE</button>
+            <button class="fire-btn" onclick="fire()">LAUNCH</button>
         </div>
 
         <div class="panel" style="height: fit-content;">
-            <div class="panel-header">
-                <h2>Real-Time Telemetry</h2>
-            </div>
-            
+            <h2>Telemetry</h2>
             <div class="stats-grid">
                 <div class="stat-box" style="border-color: #ef4444;">
-                    <span class="stat-val" id="stat-vx">0.0</span>
-                    <span class="stat-label">Vx (Horizontal)</span>
+                    <span class="stat-val" id="stat-vx">0.0</span> <span style="color:#888">Vx</span>
                 </div>
                 <div class="stat-box" style="border-color: #22c55e;">
-                    <span class="stat-val" id="stat-vy">0.0</span>
-                    <span class="stat-label">Vy (Vertical)</span>
+                    <span class="stat-val" id="stat-vy">0.0</span> <span style="color:#888">Vy</span>
                 </div>
                 <div class="stat-box" style="border-color: #eab308;">
-                    <span class="stat-val" id="stat-h">0.0</span>
-                    <span class="stat-label">Height (m)</span>
+                    <span class="stat-val" id="stat-h">0.0</span> <span style="color:#888">Height</span>
                 </div>
                 <div class="stat-box" style="border-color: #3b82f6;">
-                    <span class="stat-val" id="stat-r">0.0</span>
-                    <span class="stat-label">Range X (m)</span>
+                    <span class="stat-val" id="stat-r">0.0</span> <span style="color:#888">Range</span>
                 </div>
             </div>
-
-            <div class="hint">
-                <strong>Pro Tip:</strong> Click and drag the <span style="color:var(--accent)">Pink Circle</span> to move the target. Try to hit it!
-            </div>
-            <div class="hint" id="drag-hint" style="display:none; color: #f472b6;">
-                <strong>Note:</strong> With Drag enabled, mass matters. The path is no longer a perfect parabola. $a_x \neq 0$.
+            <div style="font-size:0.75rem; color:#64748b; margin-top:10px;">
+                * Drag the Pink Target to move it.<br>
+                * Floor markers every 10 meters.
             </div>
         </div>
     </div>
 
 <script>
-/**
- * NEWTONIAN LAB PRO
- * 10x Better Engine
- */
-
 const canvas = document.getElementById('simCanvas');
 const ctx = canvas.getContext('2d');
 
-// --- CONFIGURATION ---
-const SCALE = 15; // 15 pixels = 1 meter
-let width, height;
+// --- CONFIG ---
+const SCALE = 15; // 15px = 1 meter
+const FLOOR_HEIGHT = 80; // The visible surface height
+let width, height, groundY;
 
-// Simulation State
-let particles = []; // Array to hold multiple balls (Ghost trails)
-let activeId = -1;  // ID of the currently moving ball
+// Physics State
+let particles = [];
+let activeId = -1;
 let mode = '2D';
 let timeScale = 1.0;
 let isDraggingTarget = false;
 
-// Physics Params
-let params = {
-    u: 45,
-    theta: 45,
-    g: 9.8,
-    drag: 0.0, // Air resistance coefficient
-    bounciness: 0.7,
-    hasBounce: true
-};
+let params = { u: 45, theta: 45, g: 9.8, bounce: 0.6 };
+let target = { x: 500, y: 0, radius: 25 }; // y set in resize
 
-// The Target
-let target = {
-    x: 600,
-    y: 300, // Will set relative to ground
-    radius: 30
-};
-
-// --- INITIALIZATION ---
+// --- INIT ---
 function resize() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
-    // Reset target to ground level if uninitialized
-    if (target.y === 300) target.y = height - 100;
+    groundY = height - FLOOR_HEIGHT; // The actual physics ground level
+    
+    // Default target pos if not set
+    if(target.y === 0) {
+        target.x = width * 0.7;
+        target.y = groundY;
+    }
 }
 window.addEventListener('resize', resize);
 resize();
 
-// --- INPUT HANDLING ---
+// --- CONTROLS ---
 function updateVal(key, val) {
     val = parseFloat(val);
     if(key === 'u') { params.u = val; document.getElementById('disp-u').innerText = val + ' m/s'; }
     if(key === 'theta') { params.theta = val; document.getElementById('disp-theta').innerText = val + '°'; }
     if(key === 'g') { params.g = val; document.getElementById('disp-g').innerText = val + ' m/s²'; }
-    if(key === 'drag') { params.drag = val; document.getElementById('disp-drag').innerText = val; }
 }
 
 function setMode(m) {
@@ -360,305 +224,218 @@ function setMode(m) {
     document.getElementById('btn-1d').className = mode === '1D' ? 'active' : '';
     document.getElementById('btn-2d').className = mode === '2D' ? 'active' : '';
     
-    // UI Adjustments
     const angleRow = document.getElementById('group-angle');
     if (mode === '1D') {
-        angleRow.style.opacity = '0.5';
-        angleRow.style.pointerEvents = 'none';
-        params.theta = 90; // Lock to vertical
-        document.getElementById('disp-theta').innerText = "90° (Locked)";
+        angleRow.style.opacity = '0.5'; angleRow.style.pointerEvents = 'none';
+        params.theta = 90; document.getElementById('disp-theta').innerText = "90°";
     } else {
-        angleRow.style.opacity = '1';
-        angleRow.style.pointerEvents = 'auto';
+        angleRow.style.opacity = '1'; angleRow.style.pointerEvents = 'auto';
         params.theta = parseFloat(document.getElementById('input-theta').value);
         document.getElementById('disp-theta').innerText = params.theta + "°";
     }
     clearTrails();
 }
 
-function toggleDrag() {
-    const el = document.getElementById('check-drag');
-    const slider = document.getElementById('drag-slider');
-    const hint = document.getElementById('drag-hint');
-    
-    if (el.classList.contains('checked')) {
-        el.classList.remove('checked');
-        params.drag = 0.0;
-        slider.style.display = 'none';
-        hint.style.display = 'none';
-    } else {
-        el.classList.add('checked');
-        params.drag = parseFloat(document.querySelector('#drag-slider input').value);
-        slider.style.display = 'flex';
-        hint.style.display = 'block';
-    }
-}
-
-function toggleBounce() {
-    const el = document.getElementById('check-bounce');
-    el.classList.toggle('checked');
-    params.hasBounce = el.classList.contains('checked');
-}
-
-// --- MOUSE INTERACTION (TARGET) ---
-canvas.addEventListener('mousedown', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    
-    // Check if clicking target
-    const dist = Math.hypot(mx - target.x, my - target.y);
-    if (dist < target.radius + 10) {
-        isDraggingTarget = true;
-    }
-});
-
-canvas.addEventListener('mousemove', (e) => {
-    if (isDraggingTarget) {
-        target.x = e.clientX;
-        target.y = e.clientY;
-    }
-});
-
-canvas.addEventListener('mouseup', () => isDraggingTarget = false);
-
-
-// --- PHYSICS ENGINE ---
-
+// --- PHYSICS CLASS ---
 class Particle {
     constructor(u, theta, isGhost = false) {
-        this.rad = 8;
-        this.x = 50; // Start position X
-        this.y = height - 50; // Start position Y
+        this.rad = 10;
+        this.x = 40; 
+        this.y = groundY - this.rad - 2; // Start just above floor
         
-        // Convert Polar to Cartesian
         const rad = theta * (Math.PI / 180);
         this.vx = u * Math.cos(rad);
-        this.vy = -u * Math.sin(rad); // Negative is UP in canvas
+        this.vy = -u * Math.sin(rad); 
         
-        this.mass = 1.0;
         this.active = true;
         this.isGhost = isGhost;
         this.trail = [];
-        this.color = isGhost ? 'rgba(255, 255, 255, 0.2)' : '#38bdf8';
+        this.color = isGhost ? 'rgba(255, 255, 255, 0.15)' : '#38bdf8';
         this.startX = this.x;
-        this.startY = this.y;
     }
 
     update(dt) {
         if (!this.active) return;
 
-        // 1. Calculate Forces
-        let Fx = 0;
-        let Fy = params.g * this.mass * SCALE; // Gravity (Scaled)
+        // Gravity
+        this.vy += params.g * SCALE * dt;
+        
+        // Move
+        this.x += this.vx * SCALE * dt;
+        this.y += this.vy * SCALE * dt;
 
-        // Air Resistance (Drag Force) = -k * v
-        if (params.drag > 0) {
-            Fx += -params.drag * this.vx * SCALE; 
-            Fy += -params.drag * this.vy * SCALE;
-        }
-
-        // 2. Acceleration (a = F/m)
-        let ax = Fx / this.mass;
-        let ay = Fy / this.mass;
-
-        // 3. Integration (Euler)
-        this.vx += ax * dt;
-        this.vy += ay * dt;
-        this.x += this.vx * dt * SCALE; // Apply velocity to position
-        this.y += this.vy * dt * SCALE; // Note: gravity accel is already scaled in Fy
-
-        // 4. Ground Collision
-        if (this.y + this.rad > height) {
-            this.y = height - this.rad;
+        // Floor Collision
+        if (this.y + this.rad > groundY) {
+            this.y = groundY - this.rad;
+            this.vy *= -params.bounce;
+            this.vx *= 0.9; // Friction
             
-            if (params.hasBounce) {
-                this.vy *= -params.bounciness;
-                // Friction on bounce
-                this.vx *= 0.9; 
-                
-                // Stop if too slow
-                if (Math.abs(this.vy) < 20) this.vy = 0;
-                if (Math.abs(this.vx) < 5) this.vx = 0;
-                
-                if (this.vx === 0 && this.vy === 0) this.active = false;
-            } else {
-                this.active = false;
-            }
+            if (Math.abs(this.vy) < 20) this.vy = 0;
+            if (Math.abs(this.vx) < 5) { this.vx = 0; this.active = false; }
         }
 
-        // 5. Wall Collision
-        if (this.x > width || this.x < 0) this.active = false;
+        // Walls
+        if (this.x > width) this.active = false;
 
-        // 6. Trail Logic
+        // Trail
         if (this.active) {
             this.trail.push({x: this.x, y: this.y});
             if (this.trail.length > 200) this.trail.shift();
         }
 
-        // 7. Target Hit Check
+        // Target Check
         if (!this.isGhost) {
-            const dist = Math.hypot(this.x - target.x, this.y - target.y);
-            if (dist < this.rad + target.radius) {
-                showHitMessage();
+            const dx = this.x - target.x;
+            const dy = this.y - target.y; // target y is center, careful with ground
+            // target sits on ground usually, let's treat target.y as its center
+            if (Math.hypot(dx, dy) < this.rad + target.radius) {
+                showHit();
             }
         }
     }
 
     draw() {
-        // Draw Trail
+        // Trail
         if (this.trail.length > 1) {
             ctx.beginPath();
-            ctx.strokeStyle = this.isGhost ? this.color : `rgba(56, 189, 248, 0.5)`;
+            ctx.strokeStyle = this.isGhost ? this.color : `rgba(56, 189, 248, 0.6)`;
             ctx.lineWidth = this.isGhost ? 1 : 3;
-            for (let i = 0; i < this.trail.length; i++) {
-                ctx.lineTo(this.trail[i].x, this.trail[i].y);
-            }
+            for (let i=0; i<this.trail.length; i++) ctx.lineTo(this.trail[i].x, this.trail[i].y);
             ctx.stroke();
         }
-
-        // Draw Ball
+        // Ball
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.rad, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, this.rad, 0, Math.PI*2);
         ctx.fillStyle = this.active ? this.color : '#555';
-        ctx.shadowBlur = this.isGhost ? 0 : 15;
+        ctx.shadowBlur = this.isGhost ? 0 : 10;
         ctx.shadowColor = this.color;
         ctx.fill();
         ctx.shadowBlur = 0;
-
-        // Draw Vectors (Only for active non-ghost)
-        if (!this.isGhost && this.active) {
-            this.drawVectors();
-        }
-    }
-
-    drawVectors() {
-        const vScale = 1.5;
-        // Vx
-        drawArrow(this.x, this.y, this.x + this.vx * vScale, this.y, '#ef4444');
-        // Vy
-        drawArrow(this.x, this.y, this.x, this.y + this.vy * vScale, '#22c55e');
     }
 }
 
-function drawArrow(x1, y1, x2, y2, color) {
-    const head = 8;
-    const angle = Math.atan2(y2 - y1, x2 - x1);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
+// --- RENDER HELPERS ---
+function drawFloor() {
+    // Surface Block
+    ctx.fillStyle = '#1e293b'; 
+    ctx.fillRect(0, groundY, width, FLOOR_HEIGHT);
+    
+    // Neon Top Edge
     ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.lineTo(x2 - head * Math.cos(angle - Math.PI/6), y2 - head * Math.sin(angle - Math.PI/6));
-    ctx.moveTo(x2, y2);
-    ctx.lineTo(x2 - head * Math.cos(angle + Math.PI/6), y2 - head * Math.sin(angle + Math.PI/6));
+    ctx.moveTo(0, groundY);
+    ctx.lineTo(width, groundY);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#38bdf8';
     ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Measurements (Ruler)
+    ctx.fillStyle = '#64748b';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    
+    let startX = 40; // particle start x
+    
+    // Draw ticks every 10 meters
+    for (let m = 0; m < 200; m += 10) { // up to 2000m roughly
+        let px = startX + (m * SCALE);
+        if (px > width) break;
+        
+        // Tick line
+        ctx.fillRect(px, groundY, 2, 10);
+        
+        // Number
+        if (m > 0) ctx.fillText(m + 'm', px, groundY + 22);
+    }
 }
 
 function drawTarget() {
     ctx.beginPath();
-    ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(244, 114, 182, 0.2)'; // Inner fill
+    // If target is dragged, use mouse pos, else snap to floor for aesthetics
+    let drawY = isDraggingTarget ? target.y : Math.min(target.y, groundY - target.radius);
+    target.y = drawY; // keep updated
+
+    ctx.arc(target.x, target.y, target.radius, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.2)';
     ctx.fill();
-    ctx.strokeStyle = 'var(--accent)';
+    ctx.strokeStyle = '#f472b6';
     ctx.lineWidth = 2;
-    ctx.setLineDash([5, 5]);
+    ctx.setLineDash([4, 4]);
     ctx.stroke();
     ctx.setLineDash([]);
     
     // Bullseye
     ctx.beginPath();
-    ctx.arc(target.x, target.y, 5, 0, Math.PI*2);
-    ctx.fillStyle = 'var(--accent)';
+    ctx.arc(target.x, target.y, 4, 0, Math.PI*2);
+    ctx.fillStyle = '#f472b6';
     ctx.fill();
 }
 
-// --- MAIN LOOP ---
-
+// --- CORE LOOPS ---
 function fire() {
-    // Turn current active particle into a ghost
     if (particles.length > 0) {
-        particles[particles.length - 1].isGhost = true;
-        particles[particles.length - 1].color = 'rgba(255,255,255,0.1)';
-        particles[particles.length - 1].active = false; // Stop simulating old ones to save CPU
+        let old = particles[particles.length - 1];
+        old.isGhost = true; old.active = false; old.color = 'rgba(255,255,255,0.1)';
     }
-
-    const p = new Particle(params.u, params.theta);
-    particles.push(p);
+    particles.push(new Particle(params.u, params.theta));
     activeId = particles.length - 1;
 }
 
-function clearTrails() {
-    particles = [];
-    activeId = -1;
-    // reset stats
-    document.getElementById('stat-vx').innerText = "0.0";
-    document.getElementById('stat-vy').innerText = "0.0";
-    document.getElementById('stat-h').innerText = "0.0";
-    document.getElementById('stat-r').innerText = "0.0";
+function clearTrails() { particles = []; activeId = -1; resetStats(); }
+function resetSim() { clearTrails(); target.x = width*0.7; }
+function resetStats() {
+    ['vx','vy','h','r'].forEach(id => document.getElementById('stat-'+id).innerText = "0.0");
 }
-
-function resetSim() {
-    clearTrails();
-    target.x = 600;
-    target.y = height - 100;
-}
-
-function showHitMessage() {
+function showHit() {
     const msg = document.getElementById('hit-message');
-    msg.style.opacity = '1';
-    msg.style.transform = 'translate(-50%, -50%) scale(1.2)';
-    setTimeout(() => {
-        msg.style.opacity = '0';
-        msg.style.transform = 'translate(-50%, -50%) scale(1)';
-    }, 1500);
+    msg.style.opacity = '1'; msg.style.transform = 'translate(-50%,-50%) scale(1.2)';
+    setTimeout(() => { msg.style.opacity = '0'; msg.style.transform = 'translate(-50%,-50%) scale(1)'; }, 1000);
 }
 
+// Interaction
+canvas.addEventListener('mousedown', e => {
+    const rect = canvas.getBoundingClientRect();
+    const d = Math.hypot(e.clientX - rect.left - target.x, e.clientY - rect.top - target.y);
+    if(d < target.radius + 15) isDraggingTarget = true;
+});
+canvas.addEventListener('mousemove', e => {
+    if(isDraggingTarget) {
+        const rect = canvas.getBoundingClientRect();
+        target.x = e.clientX - rect.left;
+        target.y = e.clientY - rect.top;
+    }
+});
+canvas.addEventListener('mouseup', () => isDraggingTarget = false);
+
+// Anim Loop
 let lastTime = 0;
 function animate(timestamp) {
     const dt = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
-    // Clear Screen
+
     ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg');
     ctx.fillRect(0, 0, width, height);
 
-    // Draw Grid (Floor)
-    ctx.strokeStyle = '#334155';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(0, height);
-    ctx.lineTo(width, height);
-    ctx.stroke();
-
-    // Draw Target
+    drawFloor();
     drawTarget();
 
-    // Update & Draw Particles
     particles.forEach(p => {
-        p.update(dt * timeScale); // Apply time scaling
+        p.update(dt * timeScale);
         p.draw();
     });
 
-    // Update Stats for active particle
     if (activeId !== -1 && particles[activeId]) {
         const p = particles[activeId];
-        // Convert canvas units back to physics units for display
-        // Note: We flip Vy sign for display so Up is positive
-        const vyDisplay = (-p.vy).toFixed(1); 
-        const vxDisplay = (p.vx).toFixed(1);
-        const hDisplay = ((height - p.y - p.rad)/SCALE).toFixed(1);
-        const rDisplay = ((p.x - p.startX)/SCALE).toFixed(1);
-
-        document.getElementById('stat-vx').innerText = vxDisplay;
-        document.getElementById('stat-vy').innerText = vyDisplay;
-        document.getElementById('stat-h').innerText = Math.max(0, hDisplay);
-        document.getElementById('stat-r').innerText = rDisplay;
+        document.getElementById('stat-vx').innerText = p.vx.toFixed(1);
+        document.getElementById('stat-vy').innerText = (-p.vy).toFixed(1);
+        document.getElementById('stat-h').innerText = Math.max(0, (groundY - p.y - p.rad)/SCALE).toFixed(1);
+        document.getElementById('stat-r').innerText = ((p.x - 40)/SCALE).toFixed(1);
     }
 
     requestAnimationFrame(animate);
 }
-
-// Start
 requestAnimationFrame(animate);
 
 </script>
