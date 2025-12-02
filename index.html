@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kinematics Masterclass | JEE Mains & Advanced</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        :root {
+            --primary: #3b82f6; /* JEE Blue */
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --accent: #f43f5e;
+            --glass: rgba(30, 41, 59, 0.8);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: var(--dark);
+            color: var(--light);
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        nav {
+            position: sticky;
+            top: 0;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            border-bottom: 1px solid #334155;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        nav button {
+            background: transparent;
+            border: 1px solid #334155;
+            color: var(--light);
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        nav button:hover, nav button.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* Layout */
+        main {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .section {
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Typography & Cards */
+        h1, h2, h3 { color: var(--primary); }
+        h1 { text-align: center; font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .subtitle { text-align: center; color: #94a3b8; margin-bottom: 2rem; }
+
+        .card {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+        }
+
+        .advanced-note {
+            border-left-color: var(--accent);
+            background: rgba(244, 63, 94, 0.1);
+        }
+
+        .advanced-tag {
+            background: var(--accent);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+
+        /* Calculator Styles */
+        .calculator {
+            background: #334155;
+            padding: 20px;
+            border-radius: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            background: #1e293b;
+            border: 1px solid #475569;
+            color: white;
+            border-radius: 6px;
+        }
+
+        .btn-calc {
+            grid-column: span 2;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #result {
+            grid-column: span 2;
+            margin-top: 10px;
+            font-weight: bold;
+            color: var(--accent);
+            text-align: center;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+            border-top: 1px solid #334155;
+            margin-top: 4rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <button onclick="showSection('home')" class="active">Home</button>
+        <button onclick="showSection('1d')">Motion in 1D</button>
+        <button onclick="showSection('2d')">Motion in 2D</button>
+        <button onclick="showSection('relative')">Relative Motion</button>
+    </nav>
+
+    <main>
+        <div id="home" class="section active">
+            <h1>Kinematics Masterclass</h1>
+            <p class="subtitle">Complete Notes for JEE Mains & Advanced</p>
+            
+            <div class="card">
+                <h3>Start Here</h3>
+                <p>Welcome to your physics revision hub. This tool covers the mathematical framework of motion required for competitive exams.</p>
+                <ul>
+                    <li><strong>Differential Calculus:</strong> Essential for non-uniform acceleration.</li>
+                    <li><strong>Vectors:</strong> The backbone of 2D motion.</li>
+                    <li><strong>Frames of Reference:</strong> Crucial for relative motion.</li>
+                </ul>
+            </div>
+
+            <div class="card advanced-note">
+                <h3>🚀 JEE Advanced Tip:</h3>
+                <p>Never memorize formulas blindly. Always check if acceleration is constant ($a = \text{const}$) or variable ($a = f(t)$ or $f(x)$). If $a$ is variable, you <strong>must</strong> use integration.</p>
+            </div>
+        </div>
+
+        <div id="1d" class="section">
+            <h2>Motion in 1D (Rectilinear)</h2>
+            
+            <div class="card">
+                <h3>The 3 Equations (Constant Acceleration only)</h3>
+                <p>Valid only when $\vec{a} = \text{constant}$.</p>
+                $$v = u + at$$
+                $$s = ut + \frac{1}{2}at^2$$
+                $$v^2 = u^2 + 2as$$
+                <p><em>Remember to apply sign convention! (Usually Up/Right = Positive).</em></p>
+            </div>
+
+            <div class="card advanced-note">
+                <h3>Calculus Methods <span class="advanced-tag">JEE ADVANCED</span></h3>
+                <p>When acceleration depends on time ($t$), displacement ($x$), or velocity ($v$).</p>
+                <p><strong>1. Acceleration as f(t):</strong> $$v = \int a \cdot dt$$</p>
+                <p><strong>2. Acceleration as f(x):</strong> (Most important trick)</p>
+                $$a = \frac{dv}{dt} = \frac{dv}{dx} \cdot \frac{dx}{dt} = v \frac{dv}{dx}$$
+                $$\int v \cdot dv = \int a(x) \cdot dx$$
+            </div>
+        </div>
+
+        <div id="2d" class="section">
+            <h2>Motion in 2D (Projectile)</h2>
+
+            <div class="card">
+                <h3>Independent Axes Principle</h3>
+                <p>X-axis motion and Y-axis motion are independent of each other.</p>
+                <ul>
+                    <li><strong>X-axis:</strong> $a_x = 0$ (Uniform velocity)</li>
+                    <li><strong>Y-axis:</strong> $a_y = -g$ (Uniform acceleration)</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>Trajectory Equation</h3>
+                <p>Eliminating 't' gives the path of the particle:</p>
+                $$y = x\tan\theta - \frac{gx^2}{2u^2\cos^2\theta}$$
+                <p>This represents a Parabola.</p>
+            </div>
+
+            <div class="card">
+                <h3>Interactive Calculator</h3>
+                <p>Calculate Range and Max Height instantly.</p>
+                <div class="calculator">
+                    <div>
+                        <label>Velocity (u) m/s</label>
+                        <input type="number" id="vel" placeholder="e.g., 20">
+                    </div>
+                    <div>
+                        <label>Angle (&theta;) degrees</label>
+                        <input type="number" id="angle" placeholder="e.g., 45">
+                    </div>
+                    <button class="btn-calc" onclick="calculateProjectile()">Calculate</button>
+                    <div id="result">Results will appear here...</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="relative" class="section">
+            <h2>Relative Motion</h2>
+            
+            <div class="card">
+                <h3>General Definition</h3>
+                <p>Velocity of A with respect to B:</p>
+                $$\vec{v}_{AB} = \vec{v}_A - \vec{v}_B$$
+                <p>Acceleration of A with respect to B:</p>
+                $$\vec{a}_{AB} = \vec{a}_A - \vec{a}_B$$
+            </div>
+
+            <div class="card advanced-note">
+                <h3>River-Boat Problems <span class="advanced-tag">JEE CLASSIC</span></h3>
+                <p>Let $\vec{v}_{br}$ be velocity of boat relative to river (engine speed).</p>
+                <p>Let $\vec{v}_{r}$ be velocity of river flow.</p>
+                <p><strong>Actual Velocity:</strong> $$\vec{v}_b = \vec{v}_{br} + \vec{v}_r$$</p>
+                <p><strong>Minimum Crossing Time:</strong> Head perpendicular to flow ($t = w / v_{br}$).</p>
+                <p><strong>Shortest Path (Drift = 0):</strong> Head upstream at angle $\sin\theta = v_r / v_{br}$.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <footer>
+        <p>Keep grinding. Consistency > Intensity.</p>
+    </footer>
+
+    <script>
+        // Navigation Logic
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(sec => {
+                sec.classList.remove('active');
+            });
+            // Remove active class from buttons
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Highlight button (simple logic for demonstration)
+            const btnIndex = ['home', '1d', '2d', 'relative'].indexOf(sectionId);
+            document.querySelectorAll('nav button')[btnIndex].classList.add('active');
+        }
+
+        // Projectile Calculator Logic
+        function calculateProjectile() {
+            const u = parseFloat(document.getElementById('vel').value);
+            const theta = parseFloat(document.getElementById('angle').value);
+            const g = 9.8;
+
+            if (isNaN(u) || isNaN(theta)) {
+                document.getElementById('result').innerHTML = "Please enter valid numbers!";
+                return;
+            }
+
+            const thetaRad = theta * (Math.PI / 180);
+
+            // Formulas
+            const range = (Math.pow(u, 2) * Math.sin(2 * thetaRad)) / g;
+            const height = (Math.pow(u, 2) * Math.pow(Math.sin(thetaRad), 2)) / (2 * g);
+            const time = (2 * u * Math.sin(thetaRad)) / g;
+
+            document.getElementById('result').innerHTML = `
+                Range (R): ${range.toFixed(2)} m <br>
+                Max Height (H): ${height.toFixed(2)} m <br>
+                Time of Flight (T): ${time.toFixed(2)} s
+            `;
+        }
+    </script>
+</body>
+</html>
